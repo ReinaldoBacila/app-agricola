@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Registro Agrícola - Chumbagua</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f6f4;min-height:100vh}
+.app{max-width:480px;margin:0 auto;padding:0 0 3rem}
+
+/* LOGIN */
+.login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:#f4f6f4}
+.login-logo{width:64px;height:64px;background:#1D9E75;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem}
+.login-logo svg{width:36px;height:36px;fill:white}
+.login-card{background:white;border-radius:16px;padding:2rem;width:100%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.login-card h2{font-size:20px;font-weight:700;color:#111827;margin-bottom:4px}
+.login-card p{font-size:13px;color:#6b7280;margin-bottom:1.5rem}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:5px}
+.login-field input{width:100%;padding:11px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:15px;color:#111827;background:#fafafa}
+.login-field input:focus{outline:none;border-color:#1D9E75;background:white}
+.login-btn{width:100%;padding:13px;background:#1D9E75;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.login-btn:active{background:#0F6E56}
+.login-btn:disabled{background:#9ca3af;cursor:not-allowed}
+.login-error{background:#FEE2E2;color:#B91C1C;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none}
+.login-loading{text-align:center;color:#6b7280;font-size:13px;padding:8px;display:none}
+
+/* HEADER */
+.header{background:#1D9E75;padding:1rem 1.25rem}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.header h1{font-size:16px;font-weight:600;color:white}
+.header-user{font-size:12px;color:rgba(255,255,255,0.85)}
+.header-rol{font-size:10px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.05em}
+.header-fecha{font-size:11px;color:rgba(255,255,255,0.75);margin-top:2px}
+.logout-btn{background:rgba(255,255,255,0.2);border:none;color:white;padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer}
+
+/* TABS */
+.tabs{display:flex;background:white;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:10}
+.tab{flex:1;padding:11px 4px;font-size:11px;font-weight:500;border:none;background:none;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent}
+.tab.active{color:#1D9E75;border-bottom-color:#1D9E75}
+
+/* SECTIONS */
+.sec{display:none;padding:1rem;gap:1rem;flex-direction:column}
+.sec.active{display:flex}
+
+/* CARDS */
+.card{background:white;border-radius:12px;padding:1rem 1.25rem;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.card-title{font-size:11px;font-weight:600;color:#9ca3af;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em}
+
+/* FORM */
+label{display:block;font-size:13px;color:#374151;margin-bottom:4px;font-weight:500}
+input,select,textarea{width:100%;font-size:15px;padding:9px 12px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fafafa;color:#111827;transition:border-color 0.15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#1D9E75;background:white}
+textarea{height:65px;resize:none}
+.field{margin-bottom:13px}
+.field:last-child{margin-bottom:0}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}
+.field-row .field{margin-bottom:0}
+
+/* ACTIVIDAD */
+.act-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.act-btn{padding:9px 6px;font-size:12px;font-weight:500;border:1.5px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;cursor:pointer;text-align:center;line-height:1.3;transition:all 0.15s}
+.act-btn.sel{background:#E1F5EE;color:#0F6E56;border-color:#1D9E75}
+
+/* COUNTER */
+.counter{display:flex;align-items:center;gap:8px;margin-top:4px}
+.cbtn{width:32px;height:32px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#374151;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cval{font-size:20px;font-weight:600;min-width:28px;text-align:center}
+
+/* CHECKBOX */
+.check-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;margin-top:4px}
+.check-row.checked{background:#E1F5EE;border-color:#1D9E75}
+.check-row input{width:18px;height:18px;margin:0;flex-shrink:0}
+.check-row label{margin:0;cursor:pointer;font-size:13px;color:#374151;flex:1}
+
+/* HORA */
+.hora-badge{display:inline-flex;align-items:center;gap:5px;background:#EFF6FF;color:#1D4ED8;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:500;margin-bottom:13px}
+
+/* BUTTON */
+.btn-guardar{width:100%;padding:13px;background:#1D9E75;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer}
+.btn-guardar:disabled{background:#9ca3af;cursor:not-allowed}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#111827;color:white;padding:11px 20px;border-radius:10px;font-size:13px;font-weight:500;transition:transform 0.3s;z-index:999;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.error{background:#B91C1C}
+.toast.success{background:#0F6E56}
+
+/* INFO LOTE */
+.info-lote{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-top:8px;display:none}
+.info-lote.show{display:block}
+.info-lote-title{font-size:12px;color:#166534;font-weight:600;margin-bottom:4px}
+.info-lote-row{display:flex;justify-content:space-between;font-size:12px;color:#166534;margin-bottom:2px}
+.info-lote-warn{background:#FEF3C7;color:#92400E;padding:6px 10px;border-radius:6px;font-size:11px;margin-top:6px;display:none}
+
+/* HISTORIAL */
+.reg-item{background:white;border-radius:12px;padding:0.9rem 1.1rem;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.reg-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.badge{font-size:11px;font-weight:600;background:#E1F5EE;color:#0F6E56;padding:3px 9px;border-radius:20px}
+.badge.fp{background:#FEE2E2;color:#B91C1C}
+.reg-fecha{font-size:11px;color:#9ca3af}
+.reg-finca{font-size:14px;font-weight:600;color:#111827;margin-bottom:2px}
+.reg-meta{font-size:12px;color:#6b7280}
+
+/* RESUMEN */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:white;border-radius:10px;padding:0.9rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.stat-lbl{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:700;color:#111827}
+.empty{text-align:center;padding:2.5rem 1rem;color:#9ca3af;font-size:14px}
+
+/* FERTIRRIEGO TURNOS */
+.turno-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:6px}
+.turno-btn{padding:10px 4px;font-size:13px;font-weight:600;border:1.5px solid #e5e7eb;border-radius:8px;background:#f9fafb;color:#6b7280;cursor:pointer;text-align:center}
+.turno-btn.sel{background:#1D9E75;color:white;border-color:#1D9E75}
+.turno-btn.done{background:#E1F5EE;color:#0F6E56;border-color:#bbf7d0;cursor:not-allowed}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+  </div>
+  <div class="login-card">
+    <h2>Registro Agrícola</h2>
+    <p>Ingresa con tu correo corporativo</p>
+    <div id="loginError" class="login-error"></div>
+    <div id="loginLoading" class="login-loading">Verificando...</div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="inputEmail" placeholder="usuario@chumbagua.com" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="inputPass" placeholder="Tu contraseña" autocomplete="current-password"/>
+    </div>
+    <button class="login-btn" id="btnLogin" onclick="login()">Ingresar</button>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="mainApp" style="display:none">
+  <div class="app">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <h1>Registro agrícola</h1>
+          <div class="header-user" id="headerUser"></div>
+          <div class="header-rol" id="headerRol"></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Salir</button>
+      </div>
+      <div class="header-fecha" id="headerFecha"></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="setTab('nuevo')">Nuevo registro</button>
+      <button class="tab" onclick="setTab('historial')">Historial</button>
+      <button class="tab" onclick="setTab('resumen')">Resumen</button>
+    </div>
+
+    <!-- NUEVO REGISTRO -->
+    <div class="sec active" id="sec-nuevo">
+
+      <!-- SELECTOR ACTIVIDAD -->
+      <div class="card" id="cardActividad">
+        <div class="card-title">Actividad</div>
+        <div class="act-grid" id="actGrid">
+          <!-- Se llenan dinámicamente según permisos -->
+        </div>
+      </div>
+
+      <!-- UBICACION -->
+      <div class="card" id="cardUbicacion" style="display:none">
+        <div class="card-title">Ubicación</div>
+        <div class="field" id="fieldFinca">
+          <label>Finca</label>
+          <select id="selFinca" onchange="onFinca()">
+            <option value="">Seleccionar finca...</option>
+          </select>
+        </div>
+        <div class="field" id="fieldLote">
+          <label>Lote</label>
+          <select id="selLote" onchange="onLote()" disabled>
+            <option value="">Primero selecciona una finca</option>
+          </select>
+        </div>
+        <div id="infoLote" class="info-lote">
+          <div class="info-lote-title">Información del lote</div>
+          <div class="info-lote-row"><span>Área total:</span><span id="infoArea"></span></div>
+          <div class="info-lote-row"><span>Variedad:</span><span id="infoVar"></span></div>
+          <div class="info-lote-row"><span>Avance acumulado:</span><span id="infoAcum"></span></div>
+          <div class="info-lote-warn" id="infoWarn">⚠️ Este lote ya alcanzó el área total</div>
+        </div>
+      </div>
+
+      <!-- CAMPOS COMUNES -->
+      <div class="card" id="cardCampos" style="display:none">
+        <div class="card-title">Datos del avance</div>
+
+        <div class="field">
+          <label>Fecha</label>
+          <input type="date" id="inFecha"/>
+        </div>
+
+        <div class="field">
+          <label>Hectáreas avanzadas (ha)</label>
+          <input type="number" step="0.01" id="inHa" placeholder="0.00"/>
+        </div>
+
+        <!-- CAMPOS DETALLE: SIEMBRA -->
+        <div class="field detalle-siembra" style="display:none">
+          <label>Personal al día</label>
+          <div class="counter">
+            <button class="cbtn" type="button" onclick="changeNum('inPersonalSiembra',-1)">−</button>
+            <span class="cval" id="vPersonalSiembra">0</span>
+            <button class="cbtn" type="button" onclick="changeNum('inPersonalSiembra',1)">+</button>
+            <input type="hidden" id="inPersonalSiembra" value="0"/>
+          </div>
+        </div>
+
+        <!-- CAMPOS DETALLE: FERTILIZACION -->
+        <div class="field detalle-fertilizacion" style="display:none">
+          <label>Hora inicio</label>
+          <input type="time" id="inHoraIni"/>
+        </div>
+        <div class="field detalle-fertilizacion" style="display:none">
+          <label>Hora fin</label>
+          <input type="time" id="inHoraFin"/>
+        </div>
+        <div class="field detalle-fertilizacion" style="display:none">
+          <label>Quintales aplicados (qq)</label>
+          <input type="number" step="0.01" id="inQq" placeholder="0.00"/>
+        </div>
+
+        <!-- CAMPOS DETALLE: DESPEDRADO -->
+        <div class="field detalle-despedrado" style="display:none">
+          <label>Personal utilizado</label>
+          <div class="counter">
+            <button class="cbtn" type="button" onclick="changeNum('inPersonalDespedrado',-1)">−</button>
+            <span class="cval" id="vPersonalDespedrado">0</span>
+            <button class="cbtn" type="button" onclick="changeNum('inPersonalDespedrado',1)">+</button>
+            <input type="hidden" id="inPersonalDespedrado" value="0"/>
+          </div>
+        </div>
+
+        <!-- CAMPOS COMUNES SIN DETALLE -->
+        <div class="field detalle-generico" style="display:none">
+          <label>Personal</label>
+          <div class="counter">
+            <button class="cbtn" type="button" onclick="changeNum('inPersonalGen',-1)">−</button>
+            <span class="cval" id="vPersonalGen">0</span>
+            <button class="cbtn" type="button" onclick="changeNum('inPersonalGen',1)">+</button>
+            <input type="hidden" id="inPersonalGen" value="0"/>
+          </div>
+        </div>
+
+        <div class="check-row" id="checkFinalizado" onclick="toggleFinalizado()">
+          <input type="checkbox" id="chkFinalizado"/>
+          <label>Marcar lote como finalizado</label>
+        </div>
+
+        <div class="field" style="margin-top:13px">
+          <label>Observaciones (opcional)</label>
+          <textarea id="inObs" placeholder="Ej: clima, incidencias, etc."></textarea>
+        </div>
+
+        <div class="field" id="fieldObsFp" style="display:none">
+          <label style="color:#B91C1C">Observación de fuera de plan (obligatoria)</label>
+          <textarea id="inObsFp" placeholder="Por qué se registra fuera del plan diario"></textarea>
+        </div>
+      </div>
+
+      <!-- FERTIRRIEGO ESPECIAL -->
+      <div class="card" id="cardFertirriego" style="display:none">
+        <div class="card-title">Aplicación de Fertirriego</div>
+        <div class="field">
+          <label>Finca</label>
+          <select id="selFincaFR" onchange="onFincaFR()">
+            <option value="">Seleccionar finca...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tipo de fertirriego</label>
+          <select id="selFertirriego" onchange="onFertirriegoSel()" disabled>
+            <option value="">Selecciona finca primero</option>
+          </select>
+        </div>
+        <div id="bloqueTurnos" style="display:none">
+          <div class="field">
+            <label>Selecciona turno aplicado</label>
+            <div class="turno-grid" id="turnosGrid"></div>
+          </div>
+          <div class="field">
+            <label>Fecha de aplicación</label>
+            <input type="date" id="inFechaFR"/>
+          </div>
+          <div class="field">
+            <label>Producto / mezcla aplicada</label>
+            <input type="text" id="inProductoFR" placeholder="Ej: Urea + KCl"/>
+          </div>
+          <div class="field">
+            <label>Observaciones (opcional)</label>
+            <textarea id="inObsFR"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-guardar" id="btnGuardar" onclick="guardar()" style="display:none">Guardar registro</button>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="sec" id="sec-historial">
+      <div id="histList"></div>
+    </div>
+
+    <!-- RESUMEN -->
+    <div class="sec" id="sec-resumen">
+      <div class="stats-grid">
+        <div class="stat">
+          <div class="stat-lbl">Hoy</div>
+          <div class="stat-val" id="stHoy">0</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Esta semana</div>
+          <div class="stat-val" id="stSem">0</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Total ha registradas</div>
+        <div class="stat-val" id="stHa">0.00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== CONFIGURACION ==========
+const SUPABASE_URL = 'https://dhbyjqmdcezdiucxeqpp.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYnlqcW1kY2V6ZGl1Y3hlcXBwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NzEzMjY2MSwiZXhwIjoyMDkyNzA4NjYxfQ.zs3TkSbu2QTOfF1XV3qsiIO9R4Iv3nu8I9u1xNLd-e4';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ========== ESTADO ==========
+let usuario = null;        // datos de user_perfiles
+let actividadesPerm = [];  // actividades permitidas para el usuario
+let fincasPerm = [];       // fincas permitidas (vacío = todas)
+let actSel = null;         // actividad seleccionada actualmente
+let plantios = [];         // todos los plantíos cargados
+let fincasUnicas = [];     // lista de fincas únicas
+let lotesPorFinca = {};    // lotes agrupados por finca
+let lotesUsadosFR = {};    // turnos ya aplicados por fertirriego
+let fertirriegoActual = null;
+let turnoSeleccionado = null;
+
+// ========== AUTH ==========
+async function login(){
+  const email = document.getElementById('inputEmail').value.trim();
+  const pass = document.getElementById('inputPass').value;
+  const errBox = document.getElementById('loginError');
+  const loadBox = document.getElementById('loginLoading');
+  const btn = document.getElementById('btnLogin');
+
+  errBox.style.display = 'none';
+  if(!email || !pass){
+    errBox.textContent = 'Ingresa email y contraseña';
+    errBox.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  loadBox.style.display = 'block';
+
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error) throw error;
+
+    // Cargar perfil
+    const { data: perfil, error: e2 } = await sb.from('user_perfiles').select('*').eq('email', email).maybeSingle();
+    if(e2 || !perfil){
+      throw new Error('Tu usuario no tiene perfil configurado en el sistema');
+    }
+    if(!perfil.activo){
+      throw new Error('Tu usuario está desactivado');
+    }
+    if(!perfil.rol_avc){
+      throw new Error('Tu usuario no tiene rol asignado. Contacta al administrador.');
+    }
+
+    usuario = perfil;
+    sessionStorage.setItem('usuario', JSON.stringify(perfil));
+    await iniciarApp();
+
+  } catch(err){
+    errBox.textContent = err.message || 'Error de autenticación';
+    errBox.style.display = 'block';
+    btn.disabled = false;
+    loadBox.style.display = 'none';
+  }
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  sessionStorage.clear();
+  usuario = null;
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('inputPass').value = '';
+}
+
+// ========== INICIO ==========
+async function iniciarApp(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('headerUser').textContent = usuario.nombre_completo;
+  document.getElementById('headerRol').textContent = usuario.rol_avc.replace(/_/g,' ');
+  document.getElementById('headerFecha').textContent = new Date().toLocaleDateString('es-HN', {weekday:'long',day:'numeric',month:'long'});
+
+  // Set fecha por defecto
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('inFecha').value = hoy;
+  document.getElementById('inFechaFR').value = hoy;
+
+  await cargarPermisos();
+  await cargarPlantios();
+  renderActividades();
+  renderHistorial();
+  renderResumen();
+}
+
+async function cargarPermisos(){
+  const esAdmin = usuario.rol_avc === 'admin' || usuario.rol_avc === 'programador';
+
+  if(esAdmin){
+    // Admin ve todas las actividades activas
+    const { data, error } = await sb.from('avc_actividades')
+      .select('*')
+      .eq('activa', true)
+      .order('codigo_actividad');
+    
+    if(error){
+      toast('Error cargando actividades: ' + error.message, 'error');
+      console.error(error);
+      return;
+    }
+    
+    // Filtrar en JS: solo las que tienen detalle o son fertirriego
+    actividadesPerm = (data || []).filter(a => a.requiere_detalle || a.es_fertirriego);
+    console.log('Actividades cargadas:', actividadesPerm.length, actividadesPerm);
+  } else {
+    // Usuario normal: solo sus actividades permitidas
+    const { data } = await sb.from('avc_usuario_actividades')
+      .select('codigo_actividad, avc_actividades(*)')
+      .eq('email', usuario.email);
+    actividadesPerm = (data || []).map(r => r.avc_actividades).filter(a => a && a.activa);
+  }
+
+  // Permisos de fincas
+  const { data: fp } = await sb.from('avc_usuario_fincas')
+    .select('finca')
+    .eq('email', usuario.email);
+  fincasPerm = (fp || []).map(r => r.finca);
+}
+
+async function cargarPlantios(){
+  // Cargar todos los plantíos activos
+  let query = sb.from('maestro_plantios').select('finca_lote, finca, descripcion_finca, area_ha, variedad, ciclo, tipo_riego');
+
+  if(fincasPerm.length > 0){
+    query = query.in('finca', fincasPerm);
+  }
+
+  const { data, error } = await query;
+  if(error){ toast('Error cargando lotes', 'error'); return; }
+
+  plantios = data || [];
+
+  // Agrupar por finca
+  fincasUnicas = [...new Set(plantios.map(p => p.descripcion_finca).filter(Boolean))].sort();
+  lotesPorFinca = {};
+  plantios.forEach(p => {
+    if(!lotesPorFinca[p.descripcion_finca]) lotesPorFinca[p.descripcion_finca] = [];
+    lotesPorFinca[p.descripcion_finca].push(p);
+  });
+
+  // Llenar selects
+  const selF = document.getElementById('selFinca');
+  const selFR = document.getElementById('selFincaFR');
+  fincasUnicas.forEach(f => {
+    selF.innerHTML += `<option value="${f}">${f}</option>`;
+    selFR.innerHTML += `<option value="${f}">${f}</option>`;
+  });
+}
+
+// ========== RENDER ACTIVIDADES ==========
+function renderActividades(){
+  const grid = document.getElementById('actGrid');
+
+  // Filtrar: solo las que tienen detalle definido o son fertirriego
+  // (las que están listas para registrar)
+  const activs = actividadesPerm.filter(a => a.requiere_detalle || a.es_fertirriego);
+
+  if(activs.length === 0){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:1rem;text-align:center;color:#9ca3af;font-size:13px">No tienes actividades habilitadas para registro</div>';
+    return;
+  }
+
+  grid.innerHTML = activs.map(a => `
+    <button class="act-btn" data-codigo="${a.codigo_actividad}" onclick="selAct(this)">
+      ${a.nombre_actividad}
+    </button>
+  `).join('');
+
+  // Si solo hay 1, seleccionarla automáticamente
+  if(activs.length === 1){
+    grid.querySelector('.act-btn').click();
+  }
+}
+
+function selAct(btn){
+  document.querySelectorAll('.act-btn').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+
+  const codigo = parseInt(btn.dataset.codigo);
+  actSel = actividadesPerm.find(a => a.codigo_actividad === codigo);
+
+  // Mostrar formulario apropiado
+  if(actSel.es_fertirriego){
+    document.getElementById('cardUbicacion').style.display = 'none';
+    document.getElementById('cardCampos').style.display = 'none';
+    document.getElementById('cardFertirriego').style.display = 'block';
+    document.getElementById('btnGuardar').style.display = 'block';
+    document.getElementById('btnGuardar').textContent = 'Registrar aplicación';
+  } else {
+    document.getElementById('cardFertirriego').style.display = 'none';
+    document.getElementById('cardUbicacion').style.display = 'block';
+    document.getElementById('cardCampos').style.display = 'block';
+    document.getElementById('btnGuardar').style.display = 'block';
+    document.getElementById('btnGuardar').textContent = 'Guardar registro';
+
+    // Mostrar campos detalle según actividad
+    document.querySelectorAll('[class*="detalle-"]').forEach(el => el.style.display = 'none');
+
+    if(actSel.requiere_detalle === 'avc_det_siembra'){
+      document.querySelectorAll('.detalle-siembra').forEach(el => el.style.display = 'block');
+    } else if(actSel.requiere_detalle === 'avc_det_fertilizacion'){
+      document.querySelectorAll('.detalle-fertilizacion').forEach(el => el.style.display = 'block');
+    } else if(actSel.requiere_detalle === 'avc_det_despedrado'){
+      document.querySelectorAll('.detalle-despedrado').forEach(el => el.style.display = 'block');
+    } else {
+      document.querySelectorAll('.detalle-generico').forEach(el => el.style.display = 'block');
+    }
+  }
+}
+
+// ========== UBICACION ==========
+function onFinca(){
+  const finca = document.getElementById('selFinca').value;
+  const selL = document.getElementById('selLote');
+  selL.innerHTML = '<option value="">Seleccionar lote...</option>';
+  document.getElementById('infoLote').classList.remove('show');
+
+  if(!finca){ selL.disabled = true; return; }
+  selL.disabled = false;
+
+  const lotes = lotesPorFinca[finca] || [];
+  lotes.forEach(l => {
+    selL.innerHTML += `<option value="${l.finca_lote}">${l.finca_lote} (${l.area_ha} ha)</option>`;
+  });
+}
+
+async function onLote(){
+  const fl = document.getElementById('selLote').value;
+  if(!fl){ document.getElementById('infoLote').classList.remove('show'); return; }
+
+  const lote = plantios.find(p => p.finca_lote === fl);
+  if(!lote || !actSel) return;
+
+  // Obtener avance acumulado de esta actividad en este lote
+  const { data } = await sb.from('avc_registros')
+    .select('ha_avance')
+    .eq('finca_lote', fl)
+    .eq('codigo_actividad', actSel.codigo_actividad);
+
+  const acum = (data || []).reduce((s, r) => s + parseFloat(r.ha_avance || 0), 0);
+
+  document.getElementById('infoArea').textContent = lote.area_ha + ' ha';
+  document.getElementById('infoVar').textContent = lote.variedad || 'N/A';
+  document.getElementById('infoAcum').textContent = acum.toFixed(2) + ' / ' + lote.area_ha + ' ha';
+
+  document.getElementById('infoWarn').style.display = (acum >= lote.area_ha) ? 'block' : 'none';
+  document.getElementById('infoLote').classList.add('show');
+
+  // Verificar si está fuera de plan (solo Tipo B)
+  await verificarFueraPlan(fl);
+}
+
+async function verificarFueraPlan(fl){
+  if(!actSel || !actSel.requiere_programacion){
+    document.getElementById('fieldObsFp').style.display = 'none';
+    return;
+  }
+
+  const fecha = document.getElementById('inFecha').value;
+  const { data } = await sb.from('avc_programacion')
+    .select('id')
+    .eq('fecha', fecha)
+    .eq('finca_lote', fl)
+    .eq('codigo_actividad', actSel.codigo_actividad)
+    .maybeSingle();
+
+  if(!data){
+    document.getElementById('fieldObsFp').style.display = 'block';
+  } else {
+    document.getElementById('fieldObsFp').style.display = 'none';
+  }
+}
+
+// ========== FERTIRRIEGO ==========
+async function onFincaFR(){
+  const finca = document.getElementById('selFincaFR').value;
+  const sel = document.getElementById('selFertirriego');
+  sel.innerHTML = '<option value="">Selecciona fertirriego...</option>';
+  document.getElementById('bloqueTurnos').style.display = 'none';
+
+  if(!finca){ sel.disabled = true; return; }
+  sel.disabled = false;
+
+  // Obtener todos los fertirriegos
+  const { data: ferts } = await sb.from('avc_actividades')
+    .select('*')
+    .eq('es_fertirriego', true)
+    .order('codigo_actividad');
+
+  // Obtener cabeceras existentes para esta finca
+  const fincaCod = plantios.find(p => p.descripcion_finca === finca)?.finca;
+
+  ferts.forEach(f => {
+    sel.innerHTML += `<option value="${f.codigo_actividad}">${f.nombre_actividad}</option>`;
+  });
+}
+
+async function onFertirriegoSel(){
+  const codigo = parseInt(document.getElementById('selFertirriego').value);
+  if(!codigo){ document.getElementById('bloqueTurnos').style.display = 'none'; return; }
+
+  const fincaDesc = document.getElementById('selFincaFR').value;
+  const fincaCod = plantios.find(p => p.descripcion_finca === fincaDesc)?.finca;
+
+  // Buscar o crear cabecera
+  let { data: cab } = await sb.from('avc_fertirriego')
+    .select('*')
+    .eq('finca', fincaCod)
+    .eq('codigo_actividad', codigo)
+    .maybeSingle();
+
+  if(!cab){
+    const { data: nuevo, error } = await sb.from('avc_fertirriego')
+      .insert({
+        finca: fincaCod,
+        codigo_actividad: codigo,
+        creado_por: usuario.email
+      })
+      .select()
+      .single();
+    if(error){ toast('Error: '+error.message, 'error'); return; }
+    cab = nuevo;
+  }
+
+  fertirriegoActual = cab;
+
+  // Obtener turnos ya aplicados
+  const { data: aplicados } = await sb.from('avc_fertirriego_aplicaciones')
+    .select('numero_turno')
+    .eq('fertirriego_id', cab.id);
+  const turnosDone = (aplicados || []).map(a => a.numero_turno);
+
+  // Renderizar grid de turnos
+  const grid = document.getElementById('turnosGrid');
+  grid.innerHTML = '';
+  for(let i = 1; i <= 6; i++){
+    const done = turnosDone.includes(i);
+    grid.innerHTML += `<button class="turno-btn ${done?'done':''}" type="button" onclick="${done?'':`selTurno(${i})`}" data-turno="${i}">${i}${done?' ✓':''}</button>`;
+  }
+
+  turnoSeleccionado = null;
+  document.getElementById('bloqueTurnos').style.display = 'block';
+}
+
+function selTurno(n){
+  turnoSeleccionado = n;
+  document.querySelectorAll('.turno-btn').forEach(b => {
+    if(!b.classList.contains('done')) b.classList.remove('sel');
+  });
+  document.querySelector(`.turno-btn[data-turno="${n}"]`).classList.add('sel');
+}
+
+// ========== HELPERS ==========
+function changeNum(id, delta){
+  const el = document.getElementById(id);
+  let v = parseInt(el.value || 0) + delta;
+  if(v < 0) v = 0;
+  el.value = v;
+  document.getElementById('v' + id.substring(2)).textContent = v;
+}
+
+function toggleFinalizado(){
+  const chk = document.getElementById('chkFinalizado');
+  chk.checked = !chk.checked;
+  document.getElementById('checkFinalizado').classList.toggle('checked', chk.checked);
+}
+
+function toast(msg, tipo='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + tipo;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function setTab(tab){
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('sec-'+tab).classList.add('active');
+  if(tab === 'historial') renderHistorial();
+  if(tab === 'resumen') renderResumen();
+}
+
+// ========== GUARDAR ==========
+async function guardar(){
+  const btn = document.getElementById('btnGuardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  try {
+    if(actSel.es_fertirriego){
+      await guardarFertirriego();
+    } else {
+      await guardarRegistro();
+    }
+    toast('Registro guardado correctamente');
+    limpiarForm();
+    renderHistorial();
+    renderResumen();
+  } catch(err){
+    toast(err.message || 'Error al guardar', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = actSel.es_fertirriego ? 'Registrar aplicación' : 'Guardar registro';
+  }
+}
+
+async function guardarRegistro(){
+  const fl = document.getElementById('selLote').value;
+  const fecha = document.getElementById('inFecha').value;
+  const ha = parseFloat(document.getElementById('inHa').value || 0);
+
+  if(!fl) throw new Error('Selecciona un lote');
+  if(!fecha) throw new Error('Ingresa la fecha');
+  if(ha <= 0) throw new Error('Ingresa hectáreas avanzadas');
+
+  // Detectar si está fuera de plan (Tipo B)
+  let obsFp = null;
+  if(actSel.requiere_programacion){
+    const { data } = await sb.from('avc_programacion')
+      .select('id')
+      .eq('fecha', fecha)
+      .eq('finca_lote', fl)
+      .eq('codigo_actividad', actSel.codigo_actividad)
+      .maybeSingle();
+    if(!data){
+      obsFp = document.getElementById('inObsFp').value.trim();
+      if(!obsFp) throw new Error('Este lote no está en el plan. Debes ingresar la observación de fuera de plan');
+    }
+  }
+
+  // Personal según tipo
+  let personal = 0;
+  if(actSel.requiere_detalle === 'avc_det_siembra'){
+    personal = parseInt(document.getElementById('inPersonalSiembra').value || 0);
+  } else if(actSel.requiere_detalle === 'avc_det_despedrado'){
+    personal = parseInt(document.getElementById('inPersonalDespedrado').value || 0);
+  } else {
+    personal = parseInt(document.getElementById('inPersonalGen').value || 0);
+  }
+
+  // Insertar registro base
+  const { data: reg, error: e1 } = await sb.from('avc_registros').insert({
+    fecha,
+    finca_lote: fl,
+    codigo_actividad: actSel.codigo_actividad,
+    ha_avance: ha,
+    lote_finalizado: document.getElementById('chkFinalizado').checked,
+    personal_cantidad: personal > 0 ? personal : null,
+    observaciones: document.getElementById('inObs').value.trim() || null,
+    observacion_fuera_plan: obsFp,
+    registrado_por: usuario.email,
+    dispositivo: navigator.userAgent.substring(0, 100)
+  }).select().single();
+
+  if(e1) throw new Error(e1.message);
+
+  // Insertar detalle según actividad
+  if(actSel.requiere_detalle === 'avc_det_siembra'){
+    const { error } = await sb.from('avc_det_siembra').insert({
+      registro_id: reg.id,
+      personal_al_dia: personal
+    });
+    if(error) throw new Error(error.message);
+  } else if(actSel.requiere_detalle === 'avc_det_fertilizacion'){
+    const { error } = await sb.from('avc_det_fertilizacion').insert({
+      registro_id: reg.id,
+      hora_inicio: document.getElementById('inHoraIni').value,
+      hora_fin: document.getElementById('inHoraFin').value,
+      qq_aplicados: parseFloat(document.getElementById('inQq').value || 0)
+    });
+    if(error) throw new Error(error.message);
+  } else if(actSel.requiere_detalle === 'avc_det_despedrado'){
+    const { error } = await sb.from('avc_det_despedrado').insert({
+      registro_id: reg.id,
+      personal_utilizado: personal
+    });
+    if(error) throw new Error(error.message);
+  }
+}
+
+async function guardarFertirriego(){
+  if(!fertirriegoActual) throw new Error('Selecciona finca y fertirriego');
+  if(!turnoSeleccionado) throw new Error('Selecciona un turno');
+
+  const fecha = document.getElementById('inFechaFR').value;
+  const producto = document.getElementById('inProductoFR').value.trim();
+
+  if(!fecha) throw new Error('Ingresa la fecha');
+
+  const { error } = await sb.from('avc_fertirriego_aplicaciones').insert({
+    fertirriego_id: fertirriegoActual.id,
+    numero_turno: turnoSeleccionado,
+    fecha_aplicacion: fecha,
+    fertirriego_aplicado: producto || null,
+    observaciones: document.getElementById('inObsFR').value.trim() || null,
+    registrado_por: usuario.email
+  });
+
+  if(error) throw new Error(error.message);
+}
+
+function limpiarForm(){
+  document.getElementById('inHa').value = '';
+  document.getElementById('inObs').value = '';
+  document.getElementById('inObsFp').value = '';
+  document.getElementById('chkFinalizado').checked = false;
+  document.getElementById('checkFinalizado').classList.remove('checked');
+  document.getElementById('selFinca').value = '';
+  document.getElementById('selLote').innerHTML = '<option value="">Primero selecciona una finca</option>';
+  document.getElementById('selLote').disabled = true;
+  document.getElementById('infoLote').classList.remove('show');
+  document.getElementById('fieldObsFp').style.display = 'none';
+  ['inPersonalSiembra','inPersonalDespedrado','inPersonalGen'].forEach(id => {
+    document.getElementById(id).value = 0;
+    const v = document.getElementById('v'+id.substring(2));
+    if(v) v.textContent = '0';
+  });
+  document.getElementById('inHoraIni').value = '';
+  document.getElementById('inHoraFin').value = '';
+  document.getElementById('inQq').value = '';
+  if(actSel?.es_fertirriego){
+    document.getElementById('inProductoFR').value = '';
+    document.getElementById('inObsFR').value = '';
+    onFertirriegoSel();
+  }
+}
+
+// ========== HISTORIAL ==========
+async function renderHistorial(){
+  const cont = document.getElementById('histList');
+  cont.innerHTML = '<div class="empty">Cargando...</div>';
+
+  // Registros normales
+  const { data: regs } = await sb.from('avc_registros')
+    .select('*, avc_actividades(nombre_actividad), maestro_plantios(descripcion_finca, finca_lote)')
+    .eq('registrado_por', usuario.email)
+    .order('fecha_registro', { ascending: false })
+    .limit(50);
+
+  // Aplicaciones de fertirriego
+  const { data: frs } = await sb.from('avc_fertirriego_aplicaciones')
+    .select('*, avc_fertirriego(finca, codigo_actividad, avc_actividades(nombre_actividad))')
+    .eq('registrado_por', usuario.email)
+    .order('fecha_registro', { ascending: false })
+    .limit(50);
+
+  const items = [];
+
+  (regs || []).forEach(r => {
+    items.push({
+      tipo: 'reg',
+      fecha: r.fecha_registro,
+      titulo: r.maestro_plantios?.descripcion_finca + ' - ' + r.finca_lote,
+      actividad: r.avc_actividades?.nombre_actividad,
+      meta: `${r.ha_avance} ha · ${r.personal_cantidad || 0} personas`,
+      fp: r.fuera_de_plan
+    });
+  });
+
+  (frs || []).forEach(r => {
+    items.push({
+      tipo: 'fr',
+      fecha: r.fecha_registro,
+      titulo: r.avc_fertirriego?.finca,
+      actividad: r.avc_fertirriego?.avc_actividades?.nombre_actividad,
+      meta: `Turno ${r.numero_turno} · ${r.fertirriego_aplicado || 's/producto'}`,
+      fp: false
+    });
+  });
+
+  items.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+  if(items.length === 0){
+    cont.innerHTML = '<div class="empty">Aún no tienes registros</div>';
+    return;
+  }
+
+  cont.innerHTML = items.slice(0, 30).map(it => `
+    <div class="reg-item" style="margin-bottom:10px">
+      <div class="reg-head">
+        <span class="badge ${it.fp?'fp':''}">${it.actividad}${it.fp?' (fuera plan)':''}</span>
+        <span class="reg-fecha">${new Date(it.fecha).toLocaleString('es-HN', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+      <div class="reg-finca">${it.titulo || ''}</div>
+      <div class="reg-meta">${it.meta}</div>
+    </div>
+  `).join('');
+}
+
+// ========== RESUMEN ==========
+async function renderResumen(){
+  const hoy = new Date().toISOString().split('T')[0];
+  const inicioSem = new Date();
+  inicioSem.setDate(inicioSem.getDate() - inicioSem.getDay());
+  const inicioSemStr = inicioSem.toISOString().split('T')[0];
+
+  const { data: regs } = await sb.from('avc_registros')
+    .select('fecha, ha_avance')
+    .eq('registrado_por', usuario.email)
+    .gte('fecha', inicioSemStr);
+
+  const hoyN = (regs || []).filter(r => r.fecha === hoy).length;
+  const semN = (regs || []).length;
+  const totalHa = (regs || []).reduce((s, r) => s + parseFloat(r.ha_avance || 0), 0);
+
+  document.getElementById('stHoy').textContent = hoyN;
+  document.getElementById('stSem').textContent = semN;
+  document.getElementById('stHa').textContent = totalHa.toFixed(2) + ' ha';
+}
+
+// ========== INICIO ==========
+window.addEventListener('load', async () => {
+  // Verificar sesión existente
+  const { data: { session } } = await sb.auth.getSession();
+  if(session && session.user){
+    const { data: perfil } = await sb.from('user_perfiles').select('*').eq('email', session.user.email).maybeSingle();
+    if(perfil && perfil.activo && perfil.rol_avc){
+      usuario = perfil;
+      await iniciarApp();
+    }
+  }
+});
+
+// Re-verificar fuera de plan cuando cambia la fecha
+document.getElementById('inFecha').addEventListener('change', () => {
+  const fl = document.getElementById('selLote').value;
+  if(fl) verificarFueraPlan(fl);
+});
+</script>
+</body>
+</html>
