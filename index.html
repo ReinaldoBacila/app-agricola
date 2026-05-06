@@ -222,6 +222,26 @@ textarea{height:65px;resize:none}
             <input type="hidden" id="inPersonalSiembra" value="0"/>
           </div>
         </div>
+        <div class="field detalle-siembra" style="display:none">
+          <label>Variedad sembrada</label>
+          <input type="text" id="inVariedadSiembra" value="LAICA 00-301" placeholder="Ej: LAICA 00-301"/>
+        </div>
+        <div class="field detalle-siembra" style="display:none">
+          <label>Distancia de siembra (m)</label>
+          <input type="number" step="0.01" id="inDistSiembra" value="1.5" placeholder="1.5"/>
+        </div>
+        <div class="field detalle-siembra" style="display:none">
+          <label>Ancho de surco (m)</label>
+          <input type="number" step="0.01" id="inAnchoSurco" value="2" placeholder="2"/>
+        </div>
+        <div class="field detalle-siembra" style="display:none">
+          <label>Hora inicio</label>
+          <input type="time" id="inHoraIniSiembra" value="06:00"/>
+        </div>
+        <div class="field detalle-siembra" style="display:none">
+          <label>Hora fin</label>
+          <input type="time" id="inHoraFinSiembra" value="17:00"/>
+        </div>
 
         <!-- CAMPOS DETALLE: FERTILIZACION -->
         <div class="field detalle-fertilizacion" style="display:none">
@@ -810,7 +830,12 @@ async function guardarRegistro(){
   if(actSel.requiere_detalle === 'avc_det_siembra'){
     const { error } = await sb.from('avc_det_siembra').insert({
       registro_id: reg.id,
-      personal_al_dia: personal
+      personal_al_dia: personal,
+      variedad: document.getElementById('inVariedadSiembra').value.trim() || null,
+      distancia_siembra: parseFloat(document.getElementById('inDistSiembra').value) || null,
+      ancho_surco: parseFloat(document.getElementById('inAnchoSurco').value) || null,
+      hora_inicio: document.getElementById('inHoraIniSiembra').value || null,
+      hora_fin: document.getElementById('inHoraFinSiembra').value || null
     });
     if(error) throw new Error(error.message);
   } else if(actSel.requiere_detalle === 'avc_det_fertilizacion'){
@@ -870,6 +895,14 @@ function limpiarForm(){
   document.getElementById('inHoraIni').value = '';
   document.getElementById('inHoraFin').value = '';
   document.getElementById('inQq').value = '';
+  // Resetear campos de siembra a sus defaults
+  if(document.getElementById('inVariedadSiembra')){
+    document.getElementById('inVariedadSiembra').value = 'LAICA 00-301';
+    document.getElementById('inDistSiembra').value = '1.5';
+    document.getElementById('inAnchoSurco').value = '2';
+    document.getElementById('inHoraIniSiembra').value = '06:00';
+    document.getElementById('inHoraFinSiembra').value = '17:00';
+  }
   if(actSel?.es_fertirriego){
     document.getElementById('inProductoFR').value = '';
     document.getElementById('inObsFR').value = '';
